@@ -88,3 +88,27 @@ public/feed.xml
 public/robots.txt
 public/sitemap-0.xml
 public/sitemap.xml
+
+# Xcode
+build/
+DerivedData/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+*.xcuserdatad
+xcuserdata/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output

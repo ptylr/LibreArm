@@ -42,7 +42,6 @@ final class BPClient: NSObject, ObservableObject {
     private let cancelCommand = Data([0xF1, 0x02])
 
     // MARK: - Lifecycle
-
     override init() {
         super.init()
         central = CBCentralManager(delegate: self, queue: .main)
@@ -152,6 +151,7 @@ final class BPClient: NSObject, ObservableObject {
         }
 
         let reading = BPReading(sys: sys, dia: dia, map: map, hr: hr)
+
 
         DispatchQueue.main.async {
             self.lastReading = reading

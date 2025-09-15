@@ -4,12 +4,17 @@ import Foundation
 struct BPReading { let sys: Double; let dia: Double; let map: Double?; let hr: Double? }
 
 final class BPClient: NSObject, ObservableObject {
-    @Published var status = "Ready"
+    // UI state
+    @Published var status = "Searching for device…"
     @Published var lastReading: BPReading?
+    @Published var isConnected = false
+    @Published var canMeasure = false
+    @Published var isMeasuring = false        // 🔴 NEW: drive Start/Stop button
 
     /// Fires once per measurement session when the cuff stops sending updates.
     var onFinalReading: ((BPReading) -> Void)?
 
+    // BLE
     private var central: CBCentralManager!
     private var peripheral: CBPeripheral?
     private var measurementChar: CBCharacteristic?
@@ -20,6 +25,10 @@ final class BPClient: NSObject, ObservableObject {
     private let completionDebounceSeconds: TimeInterval = 1.5
     private var sessionActive = false
     private var hasFiredFinal = false
+
+    // Connect timeout
+    private var connectTimeoutWorkItem: DispatchWorkItem?
+    private var connectTimeoutSeconds: TimeInterval = 30
 
     // Standard Blood Pressure Service + Measurement char
     private let bpsService  = CBUUID(string: "1810")
@@ -32,6 +41,8 @@ final class BPClient: NSObject, ObservableObject {
     private let startCommand  = Data([0xF1, 0x01])
     private let cancelCommand = Data([0xF1, 0x02])
 
+    // MARK: - Lifecycle
+
     override init() {
         super.init()
         central = CBCentralManager(delegate: self, queue: .main)
@@ -39,28 +50,63 @@ final class BPClient: NSObject, ObservableObject {
 
     // MARK: - Public API
 
-    func startScanAndMeasure() {
+    /// Begin scanning/connecting to the cuff. Call on app start or when user taps Retry.
+    func startConnect(timeout: TimeInterval = 30) {
+        connectTimeoutSeconds = timeout
         guard central.state == .poweredOn else {
             status = "Bluetooth unavailable"
             return
         }
-        status = "Scanning…"
+
+        // reset UI/flags
+        isConnected = false
+        canMeasure = false
+        isMeasuring = false
+        lastReading = nil
         sessionActive = false
         hasFiredFinal = false
         completionWorkItem?.cancel()
+        connectTimeoutWorkItem?.cancel()
+
+        status = "Searching for device…"
+        central.stopScan()
         central.scanForPeripherals(withServices: [bpsService], options: nil)
+
+        // 30s timeout → mark not connected
+        let work = DispatchWorkItem { [weak self] in
+            guard let self = self, !self.isConnected else { return }
+            self.central.stopScan()
+            self.status = "Not connected (timeout). Check power & Bluetooth."
+        }
+        connectTimeoutWorkItem = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + timeout, execute: work)
     }
 
+    /// Start measurement (enabled when `canMeasure` is true).
+    func startMeasurement() {
+        guard let p = peripheral, let c = controlChar, canMeasure else { return }
+        status = "Measuring…"
+        sessionActive = true
+        hasFiredFinal = false
+        isMeasuring = true                          // 🔴 measuring ON
+        completionWorkItem?.cancel()
+        p.writeValue(startCommand, for: c, type: .withResponse)
+    }
+
+    /// Stop the current measurement without saving a reading.
     func cancelMeasurement() {
         guard let p = peripheral, let c = controlChar else { return }
         p.writeValue(cancelCommand, for: c, type: .withResponse)
-        finalizeIfNeeded()
+        // Do not call finalize (which would save); just reset state.
+        sessionActive = false
+        hasFiredFinal = true
+        isMeasuring = false                         // 🔴 measuring OFF
+        status = "Connected — ready"
     }
 
     // MARK: - Helpers
 
     private func scheduleFinalize() {
-        // Debounce: if another packet arrives, we’ll cancel and reschedule
         completionWorkItem?.cancel()
         let work = DispatchWorkItem { [weak self] in
             self?.finalizeIfNeeded()
@@ -73,19 +119,14 @@ final class BPClient: NSObject, ObservableObject {
         guard sessionActive, !hasFiredFinal, let reading = lastReading else { return }
         hasFiredFinal = true
         sessionActive = false
-        status = "Done"
+        isMeasuring = false                         // 🔴 measuring OFF at end
+        status = "Connected — ready"
         onFinalReading?(reading)
-        // Optional: disconnect to save battery
-        if let p = peripheral {
-            central.stopScan()
-            central.cancelPeripheralConnection(p)
-        }
     }
 
     // MARK: - Parser
 
     private func parseBPM(_ data: Data) {
-        // 0x2A35 layout: Flags (1), SYS (SFLOAT), DIA (SFLOAT), MAP (SFLOAT), [Timestamp 7], [Pulse SFLOAT], [...]
         func sfloat(_ lo: UInt8, _ hi: UInt8) -> Double {
             let raw = UInt16(hi) << 8 | UInt16(lo)
             let mantissa = Int16(raw & 0x0FFF)
@@ -112,10 +153,7 @@ final class BPClient: NSObject, ObservableObject {
 
         let reading = BPReading(sys: sys, dia: dia, map: map, hr: hr)
 
-        // Treat any update as "still measuring"; we’ll debounce to detect the end.
         DispatchQueue.main.async {
-            self.sessionActive = true
-            self.status = "Measuring…"
             self.lastReading = reading
             self.scheduleFinalize()
         }
@@ -128,6 +166,9 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         if central.state != .poweredOn {
             status = "Bluetooth not available"
+            isConnected = false
+            canMeasure = false
+            isMeasuring = false
         }
     }
 
@@ -135,28 +176,34 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
                         didDiscover p: CBPeripheral,
                         advertisementData: [String : Any],
                         rssi RSSI: NSNumber) {
+        central.stopScan()
+        connectTimeoutWorkItem?.cancel()
         status = "Connecting…"
         self.peripheral = p
-        central.stopScan()
         p.delegate = self
         central.connect(p, options: nil)
     }
 
     func centralManager(_ central: CBCentralManager, didConnect p: CBPeripheral) {
-        status = "Discovering…"
+        isConnected = true
+        status = "Connected — discovering…"
         p.discoverServices([bpsService])
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect p: CBPeripheral, error: Error?) {
+        isConnected = false
+        canMeasure = false
+        isMeasuring = false
         status = "Failed to connect"
     }
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral p: CBPeripheral, error: Error?) {
-        // Reset session state on disconnect
-        completionWorkItem?.cancel()
-        sessionActive = false
-        controlChar = nil
+        isConnected = false
+        canMeasure = false
+        isMeasuring = false
+        status = "Disconnected"
         measurementChar = nil
+        controlChar = nil
     }
 
     func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
@@ -174,21 +221,17 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
                 controlChar = ch
             }
         }
-
-        // Kick off once both are ready
-        if let c = controlChar, measurementChar != nil {
-            status = "Measuring…"
-            p.writeValue(startCommand, for: c, type: .withResponse)
-        }
+        canMeasure = (measurementChar != nil && controlChar != nil)
+        if canMeasure { status = "Connected — ready" }
     }
 
     func peripheral(_ p: CBPeripheral, didWriteValueFor ch: CBCharacteristic, error: Error?) {
         if let error = error, ch.uuid == control {
-            // Fallback to withoutResponse if withResponse fails
             if ch.properties.contains(.writeWithoutResponse) {
                 p.writeValue(startCommand, for: ch, type: .withoutResponse)
             } else {
                 status = "Write error: \(error.localizedDescription)"
+                isMeasuring = false
             }
         }
     }

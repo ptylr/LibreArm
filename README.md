@@ -17,13 +17,23 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
-## ✨ Features
+## ✨ Features (v1.1.0)
 
 - Connects to QardioArm over BLE (no Qardio cloud or accounts required)
-- Starts and stops a blood pressure measurement directly from the app
-- Parses and displays **systolic**, **diastolic**, **MAP**, and **heart rate**
-- Saves the **final measurement only** (debounced) into **Apple Health**
-- Simple SwiftUI interface with live status and history through HealthKit
+- **Connection management**:
+  - Start scanning automatically on launch
+  - Retry button with 30‑second connection timeout (hidden when connected)
+  - Device status always visible in the UI
+- **Measurement handling**:
+  - Single, debounced save to HealthKit (no partial inflating entries)
+  - Dynamic **Start/Stop button**  
+    - Blue *Start Measurement* when idle  
+    - Red *Stop Measurement* while inflating, sends cancel on tap
+- **UI improvements**:
+  - Centered title and status
+  - App icon displayed in header
+  - Card‑style layout for latest reading (systolic, diastolic, MAP, heart rate)
+  - Developer credit and GitHub link footer
 - 100% local: no accounts, no data leaves your device
 
 ---
@@ -41,14 +51,27 @@ This project exists because Qardio, Inc. shut down its backend services and app 
    open LibreArm.xcodeproj
    ```
 
-3. Ensure you have:
+3. Requirements:
    - Xcode 15+
    - iOS 16+ device (QardioArm does not work in the simulator)
-   - An Apple ID signed into Xcode (free developer account works for local builds)
+   - Apple ID signed into Xcode (free dev account OK for local builds)
 
 4. On first run you’ll be prompted for:
    - **Bluetooth access** (to connect to the cuff)
    - **Health access** (to save readings)
+
+---
+
+## 🖼 Screenshots
+
+<table>
+  <tr>
+    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_AppleHealth_Permissions.png" width="250" alt="Apple Health Permissions"/></td>
+    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connecting.png" width="250" alt="LibreArm connecting to QardioArm"/></td>
+    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connected.png" width="250" alt="LibreArm connected to QardioArm"/></td>
+    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Measuring.png" width="250" alt="LibreArm measuring Blood Pressure + Pulse"/></td>
+  </tr>
+</table>
 
 ---
 

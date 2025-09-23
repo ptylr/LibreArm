@@ -102,7 +102,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 1640;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					996CD8672E773AD40021963C = {
 						CreatedOnToolsVersion = 16.4;
@@ -215,6 +215,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -274,6 +275,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -287,16 +289,16 @@
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LibreArm;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to your blood pressure monitor.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm needs access to Apple Health to save your measurements.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate to Apple Health.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to a compatible cuff. Measurements are for personal wellness logging only.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm uses Apple Health only for personal wellness tracking. It does not diagnose or provide medical advice.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,16 +330,16 @@
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = LibreArm;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to your blood pressure monitor.";
-				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm needs access to Apple Health to save your measurements.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate to Apple Health.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to a compatible cuff. Measurements are for personal wellness logging only.";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm uses Apple Health only for personal wellness tracking. It does not diagnose or provide medical advice.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -115,10 +115,19 @@ final class BPClient: NSObject, ObservableObject {
     }
 
     private func finalizeIfNeeded() {
+        // Must be in-session, not already finalized, and have a latest reading
         guard sessionActive, !hasFiredFinal, let reading = lastReading else { return }
+
+        // ✅ Only finalize when the measurement sequence has finished.
+        // We treat "Pulse Rate present" as the end-of-cycle marker
+        // (per GATT 0x2A35 most cuffs include pulse only in the final frame).
+        // guard reading.hr != nil else { return }            // current behavior
+        guard reading.dia > 0 else { return }                 // fallback option
+
+
         hasFiredFinal = true
         sessionActive = false
-        isMeasuring = false                         // 🔴 measuring OFF at end
+        isMeasuring = false
         status = "Connected — ready"
         onFinalReading?(reading)
     }

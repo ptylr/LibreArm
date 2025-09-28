@@ -289,7 +289,7 @@
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -298,7 +298,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to a compatible cuff. Measurements are for personal wellness logging only.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm uses Apple Health only for personal wellness tracking. It does not diagnose or provide medical advice.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -308,7 +308,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ptylr.LibreArm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -330,7 +330,7 @@
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -339,7 +339,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.medical";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "LibreArm uses Bluetooth to connect to a compatible cuff. Measurements are for personal wellness logging only.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "LibreArm uses Apple Health only for personal wellness tracking. It does not diagnose or provide medical advice.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "LibreArm can save blood pressure and heart rate into Apple Health for personal wellness tracking. It is not a medical device.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -349,7 +349,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ptylr.LibreArm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

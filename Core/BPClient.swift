@@ -1,5 +1,11 @@
 import CoreBluetooth
 import Foundation
+import UIKit
+
+enum MeasurementMode {
+    case single
+    case average3
+}
 
 struct BPReading { let sys: Double; let dia: Double; let map: Double?; let hr: Double? }
 
@@ -10,6 +16,14 @@ final class BPClient: NSObject, ObservableObject {
     @Published var isConnected = false
     @Published var canMeasure = false
     @Published var isMeasuring = false        // 🔴 NEW: drive Start/Stop button
+
+    // Measurement mode
+    @Published var measurementMode: MeasurementMode = .single
+
+    // Averaging session state (used only when measurementMode == .average3)
+    private var remainingRuns: Int = 0
+    private var accumulatedReadings: [BPReading] = []
+    private let interRunDelaySeconds: TimeInterval = 10
 
     /// Fires once per measurement session when the cuff stops sending updates.
     var onFinalReading: ((BPReading) -> Void)?
@@ -83,12 +97,34 @@ final class BPClient: NSObject, ObservableObject {
 
     /// Start measurement (enabled when `canMeasure` is true).
     func startMeasurement() {
-        guard let p = peripheral, let c = controlChar, canMeasure else { return }
-        status = "Measuring…"
+        guard let _ = peripheral, let _ = controlChar, canMeasure else { return }
+        // If we're already in a multi-run session, ignore additional starts so the UI stays in Stop state
+        if measurementMode == .average3 && sessionActive {
+            return
+        }
+        status = (measurementMode == .average3) ? "Measuring (run 1 of 3)…" : "Measuring…"
         sessionActive = true
         hasFiredFinal = false
-        isMeasuring = true                          // 🔴 measuring ON
+        isMeasuring = true
+        UIApplication.shared.isIdleTimerDisabled = true
         completionWorkItem?.cancel()
+
+        if measurementMode == .single {
+            // One-and-done
+            accumulatedReadings.removeAll()
+            remainingRuns = 0
+            performSingleRunStart()
+        } else {
+            // Average over 3 runs spaced by 10s
+            accumulatedReadings.removeAll()
+            remainingRuns = 3
+            performSingleRunStart()
+        }
+    }
+
+    /// Internal: send the start command to the cuff (assumes BLE characteristics are ready)
+    private func performSingleRunStart() {
+        guard let p = peripheral, let c = controlChar else { return }
         p.writeValue(startCommand, for: c, type: .withResponse)
     }
 
@@ -96,10 +132,14 @@ final class BPClient: NSObject, ObservableObject {
     func cancelMeasurement() {
         guard let p = peripheral, let c = controlChar else { return }
         p.writeValue(cancelCommand, for: c, type: .withResponse)
+        // Cancel any averaging session
+        remainingRuns = 0
+        accumulatedReadings.removeAll()
         // Do not call finalize (which would save); just reset state.
         sessionActive = false
         hasFiredFinal = true
         isMeasuring = false                         // 🔴 measuring OFF
+        UIApplication.shared.isIdleTimerDisabled = false
         status = "Connected — ready"
     }
 
@@ -116,20 +156,71 @@ final class BPClient: NSObject, ObservableObject {
 
     private func finalizeIfNeeded() {
         // Must be in-session, not already finalized, and have a latest reading
-        guard sessionActive, !hasFiredFinal, let reading = lastReading else { return }
+        guard sessionActive, let reading = lastReading else { return }
 
-        // ✅ Only finalize when the measurement sequence has finished.
-        // We treat "Pulse Rate present" as the end-of-cycle marker
-        // (per GATT 0x2A35 most cuffs include pulse only in the final frame).
-        // guard reading.hr != nil else { return }            // current behavior
-        guard reading.dia > 0 else { return }                 // fallback option
+        // Only finalize when the measurement sequence has finished.
+        // We use the presence of diastolic (>0) as the completion guard.
+        guard reading.dia > 0 else { return }
 
+        // For average3 mode, accumulate and schedule subsequent runs
+        if measurementMode == .average3 {
+            accumulatedReadings.append(reading)
 
+            // If we still have more runs to do, schedule the next one with live countdown
+            if remainingRuns > 1 {
+                remainingRuns -= 1
+                var countdown = Int(interRunDelaySeconds)
+                status = "Measured run \(3 - remainingRuns) of 3 — next in \(countdown)s…"
+                isMeasuring = true
+
+                // Countdown timer updates every second
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                    countdown -= 1
+                    if countdown > 0 {
+                        self.status = "Measured run \(3 - self.remainingRuns) of 3 — next in \(countdown)s…"
+                    } else {
+                        timer.invalidate()
+                        self.status = "Measuring (run \(4 - self.remainingRuns) of 3)…"
+                        self.isMeasuring = true
+                        self.performSingleRunStart()
+                    }
+                }
+                return
+            }
+
+            // This was the last run → compute average and emit once
+            let avg = average(of: accumulatedReadings)
+            hasFiredFinal = true
+            sessionActive = false
+            isMeasuring = false
+            UIApplication.shared.isIdleTimerDisabled = false
+            status = "Connected — ready"
+            onFinalReading?(avg)
+            // reset accumulators
+            remainingRuns = 0
+            accumulatedReadings.removeAll()
+            return
+        }
+
+        // Single mode → emit immediately
         hasFiredFinal = true
         sessionActive = false
         isMeasuring = false
+        UIApplication.shared.isIdleTimerDisabled = false
         status = "Connected — ready"
         onFinalReading?(reading)
+    }
+
+    private func average(of readings: [BPReading]) -> BPReading {
+        guard !readings.isEmpty else { return lastReading ?? BPReading(sys: 0, dia: 0, map: nil, hr: nil) }
+        let n = Double(readings.count)
+        let sys = readings.map { $0.sys }.reduce(0, +) / n
+        let dia = readings.map { $0.dia }.reduce(0, +) / n
+        let mapVals = readings.compactMap { $0.map }
+        let mapAvg = mapVals.isEmpty ? nil : (mapVals.reduce(0, +) / Double(mapVals.count))
+        let hrVals = readings.compactMap { $0.hr }
+        let hrAvg = hrVals.isEmpty ? nil : (hrVals.reduce(0, +) / Double(hrVals.count))
+        return BPReading(sys: sys, dia: dia, map: mapAvg, hr: hrAvg)
     }
 
     // MARK: - Parser
@@ -258,3 +349,4 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
         }
     }
 }
+

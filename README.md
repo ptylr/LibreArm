@@ -20,7 +20,7 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
-## ✨ Features (v1.1.1)
+## ✨ Features (v1.2.0)
 
 - Connects to QardioArm over BLE (no Qardio cloud or accounts required)
 - **Connection management**:

@@ -60,6 +60,10 @@ struct ContentView: View {
 
                 // Save to Health toggle
                 Toggle("Save to Apple Health", isOn: $autoSaveToHealth)
+                Toggle("Average (3 readings, 10s apart)", isOn: Binding(
+                    get: { bp.measurementMode == .average3 },
+                    set: { bp.measurementMode = $0 ? .average3 : .single }
+                ))
 
                 Spacer(minLength: 12)
 
@@ -73,6 +77,12 @@ struct ContentView: View {
                     Text("Developed by Paul Taylor").font(.footnote).foregroundStyle(.secondary)
                     Link("GitHub: ptylr/LibreArm", destination: URL(string: "https://github.com/ptylr/LibreArm")!)
                         .font(.footnote)
+                    if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                        Text("Version \(version)")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+
                 }
                 .padding(.bottom, 8)
             }

@@ -20,6 +20,18 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
+## ✨ Features (v1.3.0)
+
+### New in v1.3.0
+
+- Added **Delay Between Readings** slider — choose between 10s, 30s, or 60s intervals for Average Mode.
+- Average Mode label updated to “Average (3 readings)” for clarity.
+- Added live countdown between readings that reflects the user-selected delay value.
+- Enhanced reliability: the **Stop Measurement** button now remains active and red for the entire multi-run session.
+- Improved UI alignment for toggles and controls.
+- Version updated to 1.3.0.
+
+---
 ## ✨ Features (v1.2.0)
 
 - Connects to QardioArm over BLE (no Qardio cloud or accounts required)

@@ -15,7 +15,8 @@ final class BPClient: NSObject, ObservableObject {
     @Published var lastReading: BPReading?
     @Published var isConnected = false
     @Published var canMeasure = false
-    @Published var isMeasuring = false        // 🔴 NEW: drive Start/Stop button
+    @Published var isMeasuring = false
+    @Published var delayBetweenRuns: Double = 15
 
     // Measurement mode
     @Published var measurementMode: MeasurementMode = .single
@@ -23,7 +24,8 @@ final class BPClient: NSObject, ObservableObject {
     // Averaging session state (used only when measurementMode == .average3)
     private var remainingRuns: Int = 0
     private var accumulatedReadings: [BPReading] = []
-    private let interRunDelaySeconds: TimeInterval = 10
+    private let interRunDelaySeconds: TimeInterval = 15
+
 
     /// Fires once per measurement session when the cuff stops sending updates.
     var onFinalReading: ((BPReading) -> Void)?
@@ -98,7 +100,7 @@ final class BPClient: NSObject, ObservableObject {
     /// Start measurement (enabled when `canMeasure` is true).
     func startMeasurement() {
         guard let _ = peripheral, let _ = controlChar, canMeasure else { return }
-        // If we're already in a multi-run session, ignore additional starts so the UI stays in Stop state
+
         if measurementMode == .average3 && sessionActive {
             return
         }
@@ -138,7 +140,7 @@ final class BPClient: NSObject, ObservableObject {
         // Do not call finalize (which would save); just reset state.
         sessionActive = false
         hasFiredFinal = true
-        isMeasuring = false                         // 🔴 measuring OFF
+        isMeasuring = false
         UIApplication.shared.isIdleTimerDisabled = false
         status = "Connected — ready"
     }
@@ -164,17 +166,22 @@ final class BPClient: NSObject, ObservableObject {
 
         // For average3 mode, accumulate and schedule subsequent runs
         if measurementMode == .average3 {
-            accumulatedReadings.append(reading)
+            if isPlausible(reading) {
+                accumulatedReadings.append(reading)
+            }
 
-            // If we still have more runs to do, schedule the next one with live countdown
+            // If we still have more runs to do, schedule the next one
             if remainingRuns > 1 {
                 remainingRuns -= 1
-                var countdown = Int(interRunDelaySeconds)
+
+                // Use the user-selected delay (from slider)
+                var countdown = Int(self.delayBetweenRuns)
                 status = "Measured run \(3 - remainingRuns) of 3 — next in \(countdown)s…"
                 isMeasuring = true
 
                 // Countdown timer updates every second
-                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
+                    guard let self = self else { timer.invalidate(); return }
                     countdown -= 1
                     if countdown > 0 {
                         self.status = "Measured run \(3 - self.remainingRuns) of 3 — next in \(countdown)s…"
@@ -185,6 +192,7 @@ final class BPClient: NSObject, ObservableObject {
                         self.performSingleRunStart()
                     }
                 }
+
                 return
             }
 
@@ -196,7 +204,6 @@ final class BPClient: NSObject, ObservableObject {
             UIApplication.shared.isIdleTimerDisabled = false
             status = "Connected — ready"
             onFinalReading?(avg)
-            // reset accumulators
             remainingRuns = 0
             accumulatedReadings.removeAll()
             return
@@ -211,16 +218,34 @@ final class BPClient: NSObject, ObservableObject {
         onFinalReading?(reading)
     }
 
+    /// Returns the arithmetic mean of valid readings only.
+    /// Falls back to the last valid reading if none pass plausibility checks.
     private func average(of readings: [BPReading]) -> BPReading {
-        guard !readings.isEmpty else { return lastReading ?? BPReading(sys: 0, dia: 0, map: nil, hr: nil) }
-        let n = Double(readings.count)
-        let sys = readings.map { $0.sys }.reduce(0, +) / n
-        let dia = readings.map { $0.dia }.reduce(0, +) / n
-        let mapVals = readings.compactMap { $0.map }
+        // Keep only plausible, finite values
+        let valid = readings.filter { isPlausible($0) }
+
+        // If none valid, try a sensible fallback
+        if valid.isEmpty {
+            if let r = lastReading, isPlausible(r) {
+                return r
+            } else {
+                // Upstream guards should prevent saving 0/0
+                return BPReading(sys: 0, dia: 0, map: nil, hr: nil)
+            }
+        }
+
+        let n = Double(valid.count)
+        let sysAvg = valid.map { $0.sys }.reduce(0, +) / n
+        let diaAvg = valid.map { $0.dia }.reduce(0, +) / n
+
+        // Optional fields averaged only when present and plausible
+        let mapVals = valid.compactMap { $0.map }.filter { $0.isFinite }
         let mapAvg = mapVals.isEmpty ? nil : (mapVals.reduce(0, +) / Double(mapVals.count))
-        let hrVals = readings.compactMap { $0.hr }
+
+        let hrVals = valid.compactMap { $0.hr }.filter { $0.isFinite && $0 >= 20 && $0 <= 220 }
         let hrAvg = hrVals.isEmpty ? nil : (hrVals.reduce(0, +) / Double(hrVals.count))
-        return BPReading(sys: sys, dia: dia, map: mapAvg, hr: hrAvg)
+
+        return BPReading(sys: sysAvg, dia: diaAvg, map: mapAvg, hr: hrAvg)
     }
 
     // MARK: - Parser
@@ -348,5 +373,11 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
             status = "Notify error: \(error.localizedDescription)"
         }
     }
+    
+    /// Filters out frames that are partial/invalid (e.g. IEEE-11073 SFLOAT NaN -> 0x07FF => 2047)
+    private func isPlausible(_ r: BPReading) -> Bool {
+        guard r.sys.isFinite, r.dia.isFinite else { return false }
+        // Adult plausible range (tune if you support other populations)
+        return (r.sys >= 60 && r.sys <= 260) && (r.dia >= 40 && r.dia <= 160)
+    }
 }
-

@@ -78,6 +78,10 @@ On first run you’ll be prompted for:
 - **Bluetooth access** (to connect to the cuff)
 - **Health access** (to save readings)
 
+### 3. Use the Web App
+If you want to use your laptop or mobile web on Android use the following link
+https://librearm.lovable.app/
+
 ---
 
 ## 🖼 Screenshots

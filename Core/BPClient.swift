@@ -42,6 +42,10 @@ final class BPClient: NSObject, ObservableObject {
     private var sessionActive = false
     private var hasFiredFinal = false
 
+    // Inflation detection — real measurements take at least ~15 seconds
+    private var measurementStartTime: Date?
+    private let minimumMeasurementSeconds: TimeInterval = 10
+
     // Connect timeout
     private var connectTimeoutWorkItem: DispatchWorkItem?
     private var connectTimeoutSeconds: TimeInterval = 30
@@ -127,6 +131,7 @@ final class BPClient: NSObject, ObservableObject {
     /// Internal: send the start command to the cuff (assumes BLE characteristics are ready)
     private func performSingleRunStart() {
         guard let p = peripheral, let c = controlChar else { return }
+        measurementStartTime = Date()
         p.writeValue(startCommand, for: c, type: .withResponse)
     }
 
@@ -277,8 +282,21 @@ final class BPClient: NSObject, ObservableObject {
 
         let reading = BPReading(sys: sys, dia: dia, map: map, hr: hr)
 
-
         DispatchQueue.main.async {
+            // Check if "final" reading (dia > 0) arrived too quickly — no inflation occurred
+            // This indicates the device didn't actually inflate (often due to low battery)
+            let elapsedTime = self.measurementStartTime.map { Date().timeIntervalSince($0) } ?? .infinity
+            let tooQuick = dia > 0 && elapsedTime < self.minimumMeasurementSeconds
+
+            if tooQuick {
+                self.sessionActive = false
+                self.isMeasuring = false
+                self.measurementStartTime = nil
+                UIApplication.shared.isIdleTimerDisabled = false
+                self.status = "🪫 Measurement failed — check device battery"
+                return
+            }
+
             self.lastReading = reading
             self.scheduleFinalize()
         }

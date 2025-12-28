@@ -99,7 +99,7 @@ On first run you’ll be prompted for:
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connecting.png" width="250" alt="LibreArm connecting to QardioArm"/></td>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connected.png" width="250" alt="LibreArm connected to QardioArm"/></td>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Measuring.png" width="250" alt="LibreArm measuring Blood Pressure + Pulse"/></td>
-    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Low_Battery.png" width="250" alt="LibreArm showing low battery condition"/></td>
+    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Low_Battery.png" width="250" alt="LibreArm showing low battery condition"/></td>
   </tr>
 </table>
 

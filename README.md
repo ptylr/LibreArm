@@ -20,6 +20,17 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
+## ✨ Features (v1.3.1)
+
+### New in v1.3.1
+
+- **Low battery detection**: Prevents false readings (e.g., 2047/238 mmHg) when the QardioArm battery is low
+  - Detects when a reading arrives too quickly (no cuff inflation occurred)
+  - Displays "🪫 Measurement failed — check device battery" message
+  - Timing-based detection: if reading completes in under 10 seconds, it indicates the cuff didn't inflate
+
+---
+
 ## ✨ Features (v1.3.0)
 
 ### New in v1.3.0

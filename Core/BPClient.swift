@@ -1,6 +1,7 @@
 import CoreBluetooth
 import Foundation
 import UIKit
+import UserNotifications
 
 enum MeasurementMode {
     case single
@@ -17,6 +18,16 @@ final class BPClient: NSObject, ObservableObject {
     @Published var canMeasure = false
     @Published var isMeasuring = false
     @Published var delayBetweenRuns: Double = 15
+
+    // Battery state (v1.4.0)
+    @Published var batteryLevelPct: Int? = nil
+    @Published var batteryStatusLine: String = "Battery: unavailable"
+
+    // Battery notification tracking
+    private enum BatteryState {
+        case unknown, normal, low, critical
+    }
+    private var lastBatteryState: BatteryState = .unknown
 
     // Measurement mode
     @Published var measurementMode: MeasurementMode = .single
@@ -35,6 +46,7 @@ final class BPClient: NSObject, ObservableObject {
     private var peripheral: CBPeripheral?
     private var measurementChar: CBCharacteristic?
     private var controlChar: CBCharacteristic?
+    private var batteryChar: CBCharacteristic?
 
     // Debounce/Session
     private var completionWorkItem: DispatchWorkItem?
@@ -53,6 +65,10 @@ final class BPClient: NSObject, ObservableObject {
     // QardioArm control ("feature") characteristic lives inside 0x1810
     private let control = CBUUID(string: "583CB5B3-875D-40ED-9098-C39EB0C1983D")
 
+    // Battery Service (v1.4.0)
+    private let batteryService = CBUUID(string: "180F")
+    private let batteryLevel = CBUUID(string: "2A19")
+
     // Commands (little-endian on the wire)
     private let startCommand  = Data([0xF1, 0x01])
     private let cancelCommand = Data([0xF1, 0x02])
@@ -61,6 +77,75 @@ final class BPClient: NSObject, ObservableObject {
     override init() {
         super.init()
         central = CBCentralManager(delegate: self, queue: .main)
+        requestNotificationPermission()
+    }
+
+    // MARK: - Notifications (v1.4.0)
+
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    private func sendBatteryNotification(level: Int, isCritical: Bool) {
+        guard UIApplication.shared.applicationState != .active else { return }
+
+        let content = UNMutableNotificationContent()
+        if isCritical {
+            content.title = "QardioArm Battery Critical"
+            content.body = "Battery critical (\(level)%). Replace batteries."
+        } else {
+            content.title = "QardioArm Battery Low"
+            content.body = "QardioArm battery low (\(level)%)."
+        }
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+
+    // MARK: - Battery Management (v1.4.0)
+
+    private func updateBatteryStatus(_ level: Int?) {
+        guard let level = level else {
+            batteryLevelPct = nil
+            batteryStatusLine = "Battery: unavailable"
+            return
+        }
+
+        batteryLevelPct = level
+
+        if level <= 10 {
+            batteryStatusLine = "Battery: \(level)% (Critical)"
+        } else if level <= 20 {
+            batteryStatusLine = "Battery: \(level)% (Low)"
+        } else {
+            batteryStatusLine = "Battery: \(level)%"
+        }
+
+        // Check for threshold crossings and send notifications
+        let newState: BatteryState
+        if level <= 10 {
+            newState = .critical
+        } else if level <= 20 {
+            newState = .low
+        } else {
+            newState = .normal
+        }
+
+        // Only notify on transitions to worse states
+        if lastBatteryState != newState {
+            if newState == .critical && lastBatteryState != .critical {
+                sendBatteryNotification(level: level, isCritical: true)
+            } else if newState == .low && (lastBatteryState == .normal || lastBatteryState == .unknown) {
+                sendBatteryNotification(level: level, isCritical: false)
+            }
+            lastBatteryState = newState
+        }
+    }
+
+    private func readBatteryLevel() {
+        guard let batteryChar = batteryChar, let peripheral = peripheral else { return }
+        peripheral.readValue(for: batteryChar)
     }
 
     // MARK: - Public API
@@ -100,6 +185,15 @@ final class BPClient: NSObject, ObservableObject {
     /// Start measurement (enabled when `canMeasure` is true).
     func startMeasurement() {
         guard let _ = peripheral, let _ = controlChar, canMeasure else { return }
+
+        // v1.4.0: Block measurement if battery is critical
+        if let batteryPct = batteryLevelPct, batteryPct <= 10 {
+            status = "Battery critical (\(batteryPct)%). Replace batteries to measure."
+            return
+        }
+
+        // v1.4.0: Read battery before starting measurement
+        readBatteryLevel()
 
         if measurementMode == .average3 && sessionActive {
             return
@@ -147,6 +241,27 @@ final class BPClient: NSObject, ObservableObject {
 
     // MARK: - Helpers
 
+    // MARK: - Strict Validation (v1.4.0)
+
+    /// Validates a blood pressure reading using strict criteria
+    func isValidReading(_ r: BPReading) -> Bool {
+        // Check for invalid/incomplete values
+        guard r.dia > 0 else { return false }
+        guard r.sys.isFinite && r.dia.isFinite else { return false }
+
+        // Physiologically plausible ranges
+        guard r.sys >= 60 && r.sys <= 260 else { return false }
+        guard r.dia >= 40 && r.dia <= 160 else { return false }
+
+        // Systolic must be greater than diastolic
+        guard r.sys > r.dia else { return false }
+
+        // Pulse pressure (sys - dia) should be reasonable
+        guard (r.sys - r.dia) <= 120 else { return false }
+
+        return true
+    }
+
     private func scheduleFinalize() {
         completionWorkItem?.cancel()
         let work = DispatchWorkItem { [weak self] in
@@ -164,11 +279,22 @@ final class BPClient: NSObject, ObservableObject {
         // We use the presence of diastolic (>0) as the completion guard.
         guard reading.dia > 0 else { return }
 
+        // v1.4.0: Strict validation - reject invalid readings
+        guard isValidReading(reading) else {
+            lastReading = nil
+            sessionActive = false
+            isMeasuring = false
+            UIApplication.shared.isIdleTimerDisabled = false
+            status = "Measurement invalid or incomplete — please try again. Check cuff fit and battery."
+            // Read battery after failed measurement
+            readBatteryLevel()
+            return
+        }
+
         // For average3 mode, accumulate and schedule subsequent runs
         if measurementMode == .average3 {
-            if isPlausible(reading) {
-                accumulatedReadings.append(reading)
-            }
+            // v1.4.0: Only add valid readings (already validated above)
+            accumulatedReadings.append(reading)
 
             // If we still have more runs to do, schedule the next one
             if remainingRuns > 1 {
@@ -196,8 +322,38 @@ final class BPClient: NSObject, ObservableObject {
                 return
             }
 
-            // This was the last run → compute average and emit once
+            // This was the last run → v1.4.0: require ALL 3 readings valid
+            if accumulatedReadings.count < 3 {
+                // Not all readings were valid - abort session
+                lastReading = nil
+                hasFiredFinal = true
+                sessionActive = false
+                isMeasuring = false
+                UIApplication.shared.isIdleTimerDisabled = false
+                status = "Average session invalid — not all readings were valid. Please try again."
+                remainingRuns = 0
+                accumulatedReadings.removeAll()
+                readBatteryLevel()
+                return
+            }
+
+            // Compute average and emit once
             let avg = average(of: accumulatedReadings)
+
+            // v1.4.0: Validate the averaged result
+            guard isValidReading(avg) else {
+                lastReading = nil
+                hasFiredFinal = true
+                sessionActive = false
+                isMeasuring = false
+                UIApplication.shared.isIdleTimerDisabled = false
+                status = "Average reading invalid — please try again."
+                remainingRuns = 0
+                accumulatedReadings.removeAll()
+                readBatteryLevel()
+                return
+            }
+
             hasFiredFinal = true
             sessionActive = false
             isMeasuring = false
@@ -206,6 +362,7 @@ final class BPClient: NSObject, ObservableObject {
             onFinalReading?(avg)
             remainingRuns = 0
             accumulatedReadings.removeAll()
+            readBatteryLevel()
             return
         }
 
@@ -216,22 +373,17 @@ final class BPClient: NSObject, ObservableObject {
         UIApplication.shared.isIdleTimerDisabled = false
         status = "Connected — ready"
         onFinalReading?(reading)
+        readBatteryLevel()
     }
 
-    /// Returns the arithmetic mean of valid readings only.
-    /// Falls back to the last valid reading if none pass plausibility checks.
+    /// Returns the arithmetic mean of valid readings only (v1.4.0: uses strict validation)
     private func average(of readings: [BPReading]) -> BPReading {
-        // Keep only plausible, finite values
-        let valid = readings.filter { isPlausible($0) }
+        // v1.4.0: Use strict validation instead of just plausibility
+        let valid = readings.filter { isValidReading($0) }
 
-        // If none valid, try a sensible fallback
+        // If none valid, return invalid reading (caller will handle)
         if valid.isEmpty {
-            if let r = lastReading, isPlausible(r) {
-                return r
-            } else {
-                // Upstream guards should prevent saving 0/0
-                return BPReading(sys: 0, dia: 0, map: nil, hr: nil)
-            }
+            return BPReading(sys: 0, dia: 0, map: nil, hr: nil)
         }
 
         let n = Double(valid.count)
@@ -277,8 +429,10 @@ final class BPClient: NSObject, ObservableObject {
 
         let reading = BPReading(sys: sys, dia: dia, map: map, hr: hr)
 
-
         DispatchQueue.main.async {
+            // v1.4.0: Only update lastReading and schedule finalize for valid readings
+            // Note: We still update lastReading for partial readings (dia == 0) so the finalize guard works
+            // But we validate in finalizeIfNeeded
             self.lastReading = reading
             self.scheduleFinalize()
         }
@@ -312,7 +466,8 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
     func centralManager(_ central: CBCentralManager, didConnect p: CBPeripheral) {
         isConnected = true
         status = "Connected — discovering…"
-        p.discoverServices([bpsService])
+        // v1.4.0: Discover both BP and Battery services
+        p.discoverServices([bpsService, batteryService])
     }
 
     func centralManager(_ central: CBCentralManager, didFailToConnect p: CBPeripheral, error: Error?) {
@@ -329,11 +484,21 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
         status = "Disconnected"
         measurementChar = nil
         controlChar = nil
+        batteryChar = nil
+        // v1.4.0: Reset battery state on disconnect
+        batteryLevelPct = nil
+        batteryStatusLine = "Battery: unavailable"
+        lastBatteryState = .unknown
     }
 
     func peripheral(_ p: CBPeripheral, didDiscoverServices error: Error?) {
-        for s in p.services ?? [] where s.uuid == bpsService {
-            p.discoverCharacteristics([measurement, control], for: s)
+        for s in p.services ?? [] {
+            if s.uuid == bpsService {
+                p.discoverCharacteristics([measurement, control], for: s)
+            } else if s.uuid == batteryService {
+                // v1.4.0: Discover battery characteristic
+                p.discoverCharacteristics([batteryLevel], for: s)
+            }
         }
     }
 
@@ -344,6 +509,14 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
                 p.setNotifyValue(true, for: ch)
             } else if ch.uuid == control {
                 controlChar = ch
+            } else if ch.uuid == batteryLevel {
+                // v1.4.0: Store battery characteristic and read immediately
+                batteryChar = ch
+                p.readValue(for: ch)
+                // Subscribe to battery notifications if supported
+                if ch.properties.contains(.notify) {
+                    p.setNotifyValue(true, for: ch)
+                }
             }
         }
         canMeasure = (measurementChar != nil && controlChar != nil)
@@ -365,6 +538,14 @@ extension BPClient: CBCentralManagerDelegate, CBPeripheralDelegate {
         guard error == nil else { status = "Read error"; return }
         if ch.uuid == measurement, let data = ch.value {
             parseBPM(data)
+        } else if ch.uuid == batteryLevel, let data = ch.value, !data.isEmpty {
+            // v1.4.0: Parse battery level (0-100%)
+            let level = Int(data[0])
+            if level >= 0 && level <= 100 {
+                DispatchQueue.main.async {
+                    self.updateBatteryStatus(level)
+                }
+            }
         }
     }
 

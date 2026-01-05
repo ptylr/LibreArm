@@ -20,12 +20,42 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
+## ✨ Features (v1.4.0)
+
+### New in v1.4.0
+
+- **Battery Level Display**: Real-time battery monitoring using standard BLE Battery Service (0x180F)
+  - Battery percentage shown in UI under connection status
+  - Low battery warning (≤20%)
+  - Critical battery alert (≤10%)
+- **Battery Notifications**: Background notifications when battery crosses low/critical thresholds (only when app is backgrounded)
+- **Critical Battery Protection**: Measurements are blocked when battery ≤10% to prevent incomplete readings
+  - Clear warning message displayed
+  - Stop button remains functional during ongoing measurements
+- **Strict Reading Validation**: Enhanced data quality control
+  - Invalid or incomplete readings are no longer displayed or saved to Apple Health
+  - Readings validated for physiological plausibility (ranges, systolic > diastolic, pulse pressure)
+  - Clear warning messages when measurements fail validation
+- **Average Mode Improvements**: Requires all 3 readings to be valid
+  - If any reading is invalid, the entire average session is rejected
+  - No partial averages saved to Health
+  - User prompted to retry if session invalid
+- **Automatic Battery Checks**: Battery level read on connect, before measurements, and after completion
+- Version updated to 1.4.0
+
+**Special Thanks:**
+v1.4.0 was inspired by valuable community feedback:
+- Battery percentage monitoring suggested by <a href="https://github.com/ashok-raj" target="_blank">ashok-raj</a>
+- Inaccurate reading validation improvements suggested by <a href="https://github.com/stacksjb" target="_blank">stacksjb</a>
+
+---
+
 ## ✨ Features (v1.3.0)
 
 ### New in v1.3.0
 
-- Added **Delay Between Readings** slider — choose between 10s, 30s, or 60s intervals for Average Mode.
-- Average Mode label updated to “Average (3 readings)” for clarity.
+- Added **Delay Between Readings** slider — choose between 15s, 30s, 45s, or 60s intervals for Average Mode.
+- Average Mode label updated to "Average (3 readings)" for clarity.
 - Added live countdown between readings that reflects the user-selected delay value.
 - Enhanced reliability: the **Stop Measurement** button now remains active and red for the entire multi-run session.
 - Improved UI alignment for toggles and controls.
@@ -86,7 +116,7 @@ On first run you’ll be prompted for:
   <tr>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_AppleHealth_Permissions.png" width="250" alt="Apple Health Permissions"/></td>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connecting.png" width="250" alt="LibreArm connecting to QardioArm"/></td>
-    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connected.png" width="250" alt="LibreArm connected to QardioArm"/></td>
+    <td><img src="./images/screenshots/LibreArm_iPhone17Pro_Home_Connected.png" width="250" alt="LibreArm connected to QardioArm"/></td>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Measuring.png" width="250" alt="LibreArm measuring Blood Pressure + Pulse"/></td>
   </tr>
 </table>
@@ -96,12 +126,15 @@ On first run you’ll be prompted for:
 ## 🔧 Development Notes
 
 - **Language & UI**: Swift + SwiftUI
-- **Bluetooth**: CoreBluetooth (service 0x1810, char 0x2A35 + vendor control UUID `583CB5B3-875D-40ED-9098-C39EB0C1983D`)
+- **Bluetooth**: CoreBluetooth
+  - Blood Pressure Service (0x1810): measurement char 0x2A35 + vendor control UUID `583CB5B3-875D-40ED-9098-C39EB0C1983D`
+  - Battery Service (0x180F): battery level char 0x2A19
 - **Health**: HealthKit (blood pressure and heart rate types)
+- **Notifications**: UserNotifications (battery warnings when backgrounded)
 - **App Icon**: Custom design included in `Assets.xcassets`
 
-The app implements a debounce strategy so that **only the final reading** after a measurement is saved, preventing dozens of partial entries in Health.  
-As of v1.1.1, LibreArm further ensures that **both systolic and diastolic readings are present** before saving to Apple Health.
+The app implements a debounce strategy so that **only the final reading** after a measurement is saved, preventing dozens of partial entries in Health.
+As of v1.4.0, LibreArm uses **strict validation** to ensure that only complete, physiologically plausible readings are displayed and saved to Apple Health.
 
 ---
 

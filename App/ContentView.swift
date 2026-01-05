@@ -27,6 +27,10 @@ struct ContentView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
+                    Text(bp.batteryStatusLine)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 }
                 .frame(maxWidth: .infinity)
 
@@ -63,7 +67,7 @@ struct ContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(bp.isMeasuring ? .red : .blue)
-                .disabled(!bp.canMeasure && !bp.isMeasuring)
+                .disabled((!bp.canMeasure && !bp.isMeasuring) || (bp.batteryLevelPct != nil && bp.batteryLevelPct! <= 10 && !bp.isMeasuring))
 
                 // Save to Health toggle (disabled while measuring)
                 Toggle("Save to Apple Health", isOn: $autoSaveToHealth)
@@ -149,7 +153,8 @@ struct ContentView: View {
                 }
 
                 bp.onFinalReading = { reading in
-                    guard autoSaveToHealth else { return }
+                    // v1.4.0: Final validation guard before saving to Health
+                    guard autoSaveToHealth, bp.isValidReading(reading) else { return }
                     Task {
                         try? await health.saveBP(
                             systolic: reading.sys,

@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject var bp: BPClient
     @EnvironmentObject var health: Health
     @State private var autoSaveToHealth = true
+    @State private var showGraph = false
 
     private var delaySecondsText: String {
         "\(Int(bp.delayBetweenRuns))s"
@@ -45,6 +46,16 @@ struct ContentView: View {
                         }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+
+                        // Show graph link
+                        Button {
+                            showGraph = true
+                        } label: {
+                            Text("Show graph")
+                                .font(.footnote)
+                                .foregroundStyle(.blue)
+                        }
+                        .padding(.top, 4)
                     }
                     .padding(20)
                     .frame(maxWidth: .infinity)
@@ -145,6 +156,11 @@ struct ContentView: View {
             .padding(.horizontal, 20)
             .navigationTitle("Blood Pressure")
             .navigationBarTitleDisplayMode(.inline)
+            .sheet(isPresented: $showGraph) {
+                if let r = bp.lastReading {
+                    HypertensionGraphSheet(systolic: r.sys, diastolic: r.dia)
+                }
+            }
             .task {
                 do {
                     try await health.requestAuth()

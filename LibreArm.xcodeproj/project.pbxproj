@@ -12,6 +12,8 @@
 		999607852E77547300929595 /* LibreArmApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9996077B2E77547300929595 /* LibreArmApp.swift */; };
 		999607862E77547300929595 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9996077A2E77547300929595 /* ContentView.swift */; };
 		999607872E77547300929595 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 999607802E77547300929595 /* Assets.xcassets */; };
+		DCD95D0C61BD434497125B11 /* HypertensionGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28BD27522D7348AAA1DD9336 /* HypertensionGraphView.swift */; };
+		43C30F3502564E628B8E2AA1 /* HypertensionGraphSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCCDBF27203D4FE790CD0F8D /* HypertensionGraphSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +24,8 @@
 		9996077E2E77547300929595 /* Health.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Health.swift; sourceTree = "<group>"; };
 		999607802E77547300929595 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		999607812E77547300929595 /* LibreArm.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LibreArm.entitlements; sourceTree = "<group>"; };
+		28BD27522D7348AAA1DD9336 /* HypertensionGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HypertensionGraphView.swift; sourceTree = "<group>"; };
+		FCCDBF27203D4FE790CD0F8D /* HypertensionGraphSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HypertensionGraphSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +62,8 @@
 			isa = PBXGroup;
 			children = (
 				9996077A2E77547300929595 /* ContentView.swift */,
+				28BD27522D7348AAA1DD9336 /* HypertensionGraphView.swift */,
+				FCCDBF27203D4FE790CD0F8D /* HypertensionGraphSheet.swift */,
 				9996077B2E77547300929595 /* LibreArmApp.swift */,
 			);
 			path = App;
@@ -148,6 +154,8 @@
 				999607842E77547300929595 /* BPClient.swift in Sources */,
 				999607852E77547300929595 /* LibreArmApp.swift in Sources */,
 				999607862E77547300929595 /* ContentView.swift in Sources */,
+				DCD95D0C61BD434497125B11 /* HypertensionGraphView.swift in Sources */,
+				43C30F3502564E628B8E2AA1 /* HypertensionGraphSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

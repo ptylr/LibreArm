@@ -3,54 +3,82 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var bp: BPClient
     @EnvironmentObject var health: Health
-    @State private var autoSaveToHealth = true
+    @AppStorage("autoSaveToHealth") private var autoSaveToHealth = true
+    @AppStorage("measurementMode") private var measurementModeString = "single"
+    @AppStorage("delayBetweenRuns") private var delayBetweenRuns: Double = 30.0
 
     private var delaySecondsText: String {
-        "\(Int(bp.delayBetweenRuns))s"
+        "\(Int(delayBetweenRuns))s"
     }
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 12) {
-                    Image("LibreArmIcon")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 96, height: 96)
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
-                        .shadow(radius: 8)
-                        .accessibilityHidden(true)
+            VStack(spacing: 16) {
+                // Top bar - LibreArm on left, Blood Pressure on right
+                HStack {
+                    Text("LibreArm")
+                        .font(.title2)
+                        .bold()
+                    Spacer()
+                    Text("Blood Pressure")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.top, 8)
 
-                    Text("LibreArm").font(.title2).bold()
+                // Status line (Connection and Battery)
+                HStack {
                     Text(bp.status)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    Spacer()
                     Text(bp.batteryStatusLine)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
-
-                // Last reading card
-                if let r = bp.lastReading {
-                    VStack(spacing: 8) {
-                        Text("\(Int(r.sys))/\(Int(r.dia)) mmHg")
-                            .font(.system(size: 36, weight: .semibold))
-                        HStack(spacing: 16) {
-                            if let map = r.map { Label("\(Int(map)) MAP", systemImage: "gauge") }
-                            if let hr = r.hr   { Label("\(Int(hr)) bpm", systemImage: "heart.fill") }
-                        }
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    }
-                    .padding(20)
-                    .frame(maxWidth: .infinity)
-                    .background(.ultraThinMaterial)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
+                .padding(.horizontal, 4)
+
+                // Reading card with embedded graph - always visible
+                VStack(spacing: 8) {
+                    if let r = bp.lastReading {
+                        // BP reading and stats on same line
+                        HStack(spacing: 12) {
+                            Text("\(Int(r.sys))/\(Int(r.dia)) mmHg")
+                                .font(.system(size: 24, weight: .semibold))
+                            if let map = r.map {
+                                Label("\(Int(map)) MAP", systemImage: "gauge")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                            if let hr = r.hr {
+                                Label("\(Int(hr)) bpm", systemImage: "heart.fill")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+
+                        // Embedded graph with actual reading
+                        HypertensionGraphView(systolic: r.sys, diastolic: r.dia)
+                            .frame(height: 280)
+                            .padding(.top, 4)
+                    } else {
+                        // Placeholder when no reading exists yet
+                        Text("No reading yet")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(.secondary)
+
+                        // Empty graph with default values
+                        HypertensionGraphView(systolic: 120, diastolic: 80)
+                            .frame(height: 280)
+                            .padding(.top, 4)
+                            .opacity(0.3)
+                    }
+                }
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
                 // Start/Stop button
                 Button {
@@ -79,45 +107,44 @@ struct ContentView: View {
                     Spacer()
                     Toggle("", isOn: Binding(
                         get: { bp.measurementMode == .average3 },
-                        set: { bp.measurementMode = $0 ? .average3 : .single }
+                        set: { newValue in
+                            bp.measurementMode = newValue ? .average3 : .single
+                            measurementModeString = newValue ? "average3" : "single"
+                        }
                     ))
                     .labelsHidden()
                     .disabled(bp.isMeasuring)
                 }
 
-                // Delay Slider (only visible in Average mode; disabled while measuring)
-                if bp.measurementMode == .average3 {
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("Delay between readings (seconds)")
-                            Spacer()
-                            Text(delaySecondsText)
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(
-                            value: Binding<Double>(
-                                get: { bp.delayBetweenRuns },
-                                set: { newVal in bp.delayBetweenRuns = newVal }
-                            ),
-                            in: 15...60, // updated min
-                            step: 15,    // updated step
-                            onEditingChanged: { editing in
-                                if !editing {
-                                    // Snap to nearest of [15, 30, 45, 60]
-                                    let options: [Double] = [15, 30, 45, 60]
-                                    let v = bp.delayBetweenRuns
-                                    let snapped = options.min(by: { abs($0 - v) < abs($1 - v) }) ?? 30
-                                    bp.delayBetweenRuns = snapped
-                                }
-                            }
-                        )
-                        .disabled(bp.isMeasuring)
+                // Delay Slider (always visible, disabled when not in Average mode)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("Delay between readings (seconds)")
+                        Spacer()
+                        Text(delaySecondsText)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
-                    .padding(.horizontal)
+                    Slider(
+                        value: $delayBetweenRuns,
+                        in: 15...60,
+                        step: 15,
+                        onEditingChanged: { editing in
+                            if !editing {
+                                // Snap to nearest of [15, 30, 45, 60]
+                                let options: [Double] = [15, 30, 45, 60]
+                                let v = delayBetweenRuns
+                                let snapped = options.min(by: { abs($0 - v) < abs($1 - v) }) ?? 30
+                                delayBetweenRuns = snapped
+                                bp.delayBetweenRuns = snapped
+                            }
+                        }
+                    )
+                    .disabled(bp.isMeasuring || bp.measurementMode != .average3)
                 }
+                .padding(.horizontal)
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 8)
 
                 // Retry button
                 if !bp.isConnected {
@@ -126,8 +153,8 @@ struct ContentView: View {
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
 
-                // Footer
-                VStack(spacing: 6) {
+                // Footer - Credits
+                VStack(spacing: 4) {
                     Text("Developed by Paul Taylor")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
@@ -143,9 +170,12 @@ struct ContentView: View {
                 .padding(.bottom, 8)
             }
             .padding(.horizontal, 20)
-            .navigationTitle("Blood Pressure")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
             .task {
+                // Restore settings from UserDefaults
+                bp.measurementMode = (measurementModeString == "average3") ? .average3 : .single
+                bp.delayBetweenRuns = delayBetweenRuns
+
                 do {
                     try await health.requestAuth()
                 } catch {

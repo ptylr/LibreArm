@@ -143,9 +143,8 @@ On first run you’ll be prompted for:
 <table>
   <tr>
     <td><img src="./images/screenshots/LibreArm_iPhone16Pro_AppleHealth_Permissions.png" width="250" alt="Apple Health Permissions"/></td>
-    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Connecting.png" width="250" alt="LibreArm connecting to QardioArm"/></td>
-    <td><img src="./images/screenshots/LibreArm_iPhone17Pro_Home_Connected.png" width="250" alt="LibreArm connected to QardioArm"/></td>
-    <td><img src="./images/screenshots/LibreArm_iPhone16Pro_Home_Measuring.png" width="250" alt="LibreArm measuring Blood Pressure + Pulse"/></td>
+    <td><img src="./images/screenshots/LibreArm_v1.5.0_NoReading.png" width="250" alt="LibreArm with hypertension graph - no reading yet"/></td>
+    <td><img src="./images/screenshots/LibreArm_v1.5.0_Measuring.png" width="250" alt="LibreArm measuring with live graph update"/></td>
   </tr>
 </table>
 

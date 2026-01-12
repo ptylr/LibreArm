@@ -20,6 +20,34 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 ---
 
+## ✨ Features (v1.5.0)
+
+### New in v1.5.0
+
+- **Always-Visible Hypertension Graph**: Blood pressure graph now permanently displayed on main screen
+  - No longer hidden behind a modal/button
+  - Shows placeholder graph with reduced opacity when no reading exists yet
+  - Graph updates automatically with each new reading
+  - Color-coded zones: Low (cyan), Normal (green), Prehypertension (orange), Stage 1 (pink), Stage 2 (red)
+- **Settings Persistence**: User preferences now saved between app sessions
+  - "Save to Apple Health" toggle state persisted
+  - "Average (3 readings)" mode selection persisted
+  - Delay slider value persisted (15s, 30s, 45s, or 60s)
+  - Settings restored automatically on app launch
+- **Improved UI Layout**: Streamlined interface with no shifting elements
+  - Removed app icon from main view (less clutter)
+  - Top bar shows "LibreArm" (left) and "Blood Pressure" (right)
+  - Status and battery info displayed on dedicated line
+  - Delay slider always visible (disabled when not in Average mode)
+  - Fixed layout prevents UI jumping when toggling settings
+- **Enhanced Graph Integration**: Hypertension classification graph embedded directly in reading card
+  - Proper axis labels (Systolic/Diastolic in mmHg)
+  - Zone labels clearly positioned and left-aligned
+  - Reading plot point with white border and shadow for visibility
+- Version updated to 1.5.0
+
+---
+
 ## ✨ Features (v1.4.0)
 
 ### New in v1.4.0

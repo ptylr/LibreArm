@@ -179,11 +179,24 @@ Pull requests are welcome! If you’d like to contribute improvements (UI, Bluet
 
 ---
 
+## Android Port (Community)
+A community-maintained Android port of LibreArm is available for users who want similar functionality on Android devices.
+
+- Android repository: https://github.com/agreenbhm/LibreArm_Android
+- Author: Drew Green (GitHub: https://github.com/agreenbhm)
+- Background and discussion: https://github.com/ptylr/LibreArm/issues/11
+
+This Android implementation is a separate, community-driven project and is not affiliated with or maintained as part of the LibreArm iOS app. Please direct any Android-specific questions, issues, or contributions to the Android repository.
+
+---
+
+
 ## 📜 License
 
 This project is licensed under the [MIT License](LICENSE).
 
 ---
+
 
 ## Disclaimer
 This document is provided for information purposes only. Paul Taylor may change the contents hereof without notice. This document is not warranted to be error-free, nor subject to any other warranties or conditions, whether expressed orally or implied in law, including implied warranties and conditions of merchantability or fitness for a particular purpose. Paul Taylor specifically disclaims any liability with respect to this document and no contractual obligations are formed either directly or indirectly by this document. The technologies, functionality, services, and processes described herein are subject to change without notice.

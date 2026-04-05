@@ -57,7 +57,7 @@ struct HypertensionGraphView: View {
                 path.addLine(to: CGPoint(x: dia100X, y: sys160Y))
                 path.addLine(to: CGPoint(x: dia100X, y: height))
             }
-            .stroke(Color.black, lineWidth: 2)
+            .stroke(Color.primary, lineWidth: 2)
 
             // Stage 1 Hypertension (Pink) - sys 140-159 OR dia 90-99
             Path { path in
@@ -84,7 +84,7 @@ struct HypertensionGraphView: View {
                 path.addLine(to: CGPoint(x: dia90X, y: sys140Y))
                 path.addLine(to: CGPoint(x: dia90X, y: height))
             }
-            .stroke(Color.black, lineWidth: 2)
+            .stroke(Color.primary, lineWidth: 2)
 
             // Prehypertension (Orange) - sys 120-139 OR dia 80-89
             Path { path in
@@ -111,7 +111,7 @@ struct HypertensionGraphView: View {
                 path.addLine(to: CGPoint(x: dia80X, y: sys120Y))
                 path.addLine(to: CGPoint(x: dia80X, y: height))
             }
-            .stroke(Color.black, lineWidth: 2)
+            .stroke(Color.primary, lineWidth: 2)
 
             // Normal (Green) - sys 90-119 AND dia 60-79, PLUS fill the Low space
             // This creates a single green area that extends all the way to bottom-left
@@ -138,7 +138,7 @@ struct HypertensionGraphView: View {
                 path.move(to: CGPoint(x: 0, y: sys90Y))
                 path.addLine(to: CGPoint(x: dia60X, y: sys90Y))
             }
-            .stroke(Color.black, lineWidth: 2)
+            .stroke(Color.primary, lineWidth: 2)
 
             // Low (Cyan) - Overlay on the left portion
             Path { path in
@@ -172,7 +172,7 @@ struct HypertensionGraphView: View {
             HStack {
                 Text("High: Stage 2 Hypertension")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .offset(x: labelPadding)
@@ -181,7 +181,7 @@ struct HypertensionGraphView: View {
             HStack {
                 Text("High: Stage 1 Hypertension")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .offset(x: labelPadding)
@@ -190,7 +190,7 @@ struct HypertensionGraphView: View {
             HStack {
                 Text("Prehypertension")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .offset(x: labelPadding)
@@ -199,7 +199,7 @@ struct HypertensionGraphView: View {
             HStack {
                 Text("Normal")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .offset(x: labelPadding)
@@ -208,7 +208,7 @@ struct HypertensionGraphView: View {
             HStack {
                 Text("Low")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.primary)
                 Spacer()
             }
             .offset(x: labelPadding)
@@ -255,13 +255,13 @@ struct HypertensionGraphView: View {
         let y = mapY(clampedSys, height: height)
 
         return Circle()
-            .fill(.black)
+            .fill(Color.primary)
             .frame(width: 18, height: 18)
             .overlay(
                 Circle()
-                    .strokeBorder(.white, lineWidth: 3.5)
+                    .strokeBorder(Color(UIColor.systemBackground), lineWidth: 3.5)
             )
-            .shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2)
+            .shadow(color: Color.primary.opacity(0.5), radius: 4, x: 0, y: 2)
             .position(x: x, y: y)
     }
 

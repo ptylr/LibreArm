@@ -17,6 +17,7 @@ This project exists because Qardio, Inc. shut down its backend services and app 
 
 - 📲 **Available on the [Apple App Store](https://apps.apple.com/gb/app/librearm/id6752661389)**  
 - 💻 Open source on [GitHub](https://github.com/ptylr/LibreArm) for transparency and community contributions  
+- 🫘 **[Buy LibreArm a coffee](https://buy.stripe.com/aFa28tafD9ZydgpeRV9EI00)** — LibreArm will always remain free. Voluntary support helps its continued development and does not unlock features or priority.
 
 ---
 

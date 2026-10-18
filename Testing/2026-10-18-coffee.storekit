@@ -1,0 +1,29 @@
+{
+  "identifier" : "AA60EC8D",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "5.00",
+      "familyShareable" : false,
+      "internalID" : "627063001",
+      "localizations" : [
+        {
+          "description" : "Optional one-time support. No features or priority are unlocked.",
+          "displayName" : "Buy LibreArm a coffee",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "com.ptylr.LibreArm.coffee",
+      "referenceName" : "LibreArm Coffee",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6752661389",
+    "_failTransactionsEnabled" : false,
+    "_locale" : "en_GB",
+    "_storefront" : "GBR"
+  },
+  "subscriptionGroups" : [],
+  "version" : { "major" : 3, "minor" : 0 }
+}

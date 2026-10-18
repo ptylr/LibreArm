@@ -41,6 +41,12 @@ LibreArm does **not** collect, transmit, or store any personal information outsi
 
 ---
 
+## Optional Support Purchases
+
+If you choose to buy LibreArm a coffee in the app, Apple processes the one-time purchase using your Apple Account. LibreArm verifies and acknowledges the purchase through StoreKit but does not receive your payment details, send Health readings with the purchase, or store a supporter profile. Support is optional and does not unlock features or priority.
+
+---
+
 ## Security
 
 Because LibreArm does not transmit or store data externally, your information is protected by the security of your iPhone and Apple Health.

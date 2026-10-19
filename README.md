@@ -22,7 +22,7 @@ LibreArm is a free, open-source iPhone app that connects directly to a QardioArm
 
 🫘 [Buy LibreArm a coffee](https://buy.stripe.com/aFa28tafD9ZydgpeRV9EI00) — LibreArm will always remain free. Voluntary support helps its continued development and does not unlock features or priority.
 
-## Upcoming optional coffee purchase
+## Version 1.7.0 — preparing for release
 
 The app footer includes **🫘 Buy LibreArm a coffee**, opening an optional one-time Apple in-app purchase at the price shown in your local currency. It is not a subscription and unlocks no features or priority. This change is in development and is not yet released; the Stripe support link above remains available independently.
 
@@ -36,7 +36,7 @@ xcodebuild -project LibreArm.xcodeproj -scheme LibreArm \
 
 ## Version 1.6.0
 
-Version 1.6.0 is the current development release and includes:
+Version 1.6.0 includes:
 
 - **One, two or three readings:** choose how many readings LibreArm should take and average, with a configurable 15–60 second interval between multiple readings.
 - **Guest measurements:** take a one-off measurement that remains visible in LibreArm but is never saved to the owner's Apple Health data; owner settings are preserved and guest mode switches off after the completed run.

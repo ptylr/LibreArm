@@ -16,6 +16,9 @@
 		A10000000000000000000001 /* BloodPressureMeasurement.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000002 /* BloodPressureMeasurement.swift */; };
 		A10000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000004 /* PrivacyInfo.xcprivacy */; };
 		A20000000000000000000001 /* BloodPressureMeasurementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* BloodPressureMeasurementTests.swift */; };
+		A30000000000000000000001 /* CoffeeSupport in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000002; };
+		A30000000000000000000003 /* CoffeeSupportTests in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000004; };
+		A30000000000000000000006 = {isa = PBXBuildFile; fileRef = A30000000000000000000005; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +34,9 @@
 		A10000000000000000000004 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A20000000000000000000002 /* BloodPressureMeasurementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BloodPressureMeasurementTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000003 /* LibreArmTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LibreArmTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A30000000000000000000002 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "2026-10-18-coffee-support.swift"; sourceTree = "<group>"; };
+		A30000000000000000000004 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "2026-10-18-coffee-support-tests.swift"; sourceTree = "<group>"; };
+		A30000000000000000000005 = {isa = PBXFileReference; lastKnownFileType = text; path = "Testing/2026-10-18-coffee.storekit"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				996CD8692E773AD40021963C /* Products */,
+				A30000000000000000000005 /* Coffee StoreKit configuration */,
 				9996077C2E77547300929595 /* App */,
 				9996077F2E77547300929595 /* Core */,
 				A20000000000000000000005 /* LibreArmTests */,
@@ -88,6 +95,7 @@
 			children = (
 				9996077D2E77547300929595 /* BPClient.swift */,
 				9996077E2E77547300929595 /* Health.swift */,
+				A30000000000000000000002 /* CoffeeSupport */,
 				A10000000000000000000002 /* BloodPressureMeasurement.swift */,
 			);
 			path = Core;
@@ -97,6 +105,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000002 /* BloodPressureMeasurementTests.swift */,
+				A30000000000000000000004 /* CoffeeSupportTests */,
 			);
 			path = LibreArmTests;
 			sourceTree = "<group>";
@@ -185,6 +194,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A30000000000000000000006 /* Coffee configuration (tests only) */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -205,6 +215,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A20000000000000000000001 /* BloodPressureMeasurementTests.swift in Sources */,
+				A30000000000000000000003 /* CoffeeSupportTests in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -213,6 +224,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				999607832E77547300929595 /* Health.swift in Sources */,
+				A30000000000000000000001 /* CoffeeSupport in Sources */,
 				999607842E77547300929595 /* BPClient.swift in Sources */,
 				999607852E77547300929595 /* LibreArmApp.swift in Sources */,
 				999607862E77547300929595 /* ContentView.swift in Sources */,
@@ -375,9 +387,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Testing/2026-10-18-simulator-debug.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -396,7 +409,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.0;
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ptylr.LibreArm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -418,7 +431,7 @@
 				CODE_SIGN_ENTITLEMENTS = LibreArm.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -437,7 +450,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.6.0;
+				MARKETING_VERSION = 1.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ptylr.LibreArm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -456,6 +469,7 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_ENTITLEMENTS[sdk=iphonesimulator*]" = "Testing/2026-10-18-simulator-debug.entitlements";
 				DEVELOPMENT_TEAM = 9R75B5EZBN;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.5;

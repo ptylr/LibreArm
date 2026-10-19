@@ -3,6 +3,14 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject private var bp: BPClient
     @EnvironmentObject private var health: Health
+    @EnvironmentObject private var coffee: CoffeeSupport
+    @State private var showsCoffeeSupport = {
+#if DEBUG
+        ProcessInfo.processInfo.arguments.contains("--screenshot-state=coffee")
+#else
+        false
+#endif
+    }()
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("autoSaveToHealth") private var autoSaveToHealth = true
     @AppStorage("readingCount") private var readingCount = 1
@@ -29,6 +37,9 @@ struct ContentView: View {
             }
             .toolbar(.hidden, for: .navigationBar)
             .task { await configure() }
+            .sheet(isPresented: $showsCoffeeSupport) {
+                CoffeeSupportView(coffee: coffee)
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active { bp.refreshBattery() }
             }
@@ -223,20 +234,41 @@ struct ContentView: View {
     }
 
     private var footer: some View {
-        HStack(alignment: .center, spacing: 6) {
-            Text("Paul Taylor")
-            Text("•")
-            Link("GitHub: ptylr/LibreArm", destination: URL(string: "https://github.com/ptylr/LibreArm")!)
-                .foregroundStyle(.blue)
-            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-                Text("• v\(version)")
+        VStack(spacing: 0) {
+            Button {
+                showsCoffeeSupport = true
+            } label: {
+                HStack(spacing: 6) {
+                    Text("🫘")
+                        .accessibilityHidden(true)
+                    Text("Buy LibreArm a coffee")
+                }
+                .font(.caption)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .foregroundStyle(.blue)
+            .accessibilityLabel("Buy LibreArm a coffee")
+            .accessibilityHint("Shows an optional one-time Apple purchase")
+
+            HStack(alignment: .center, spacing: 6) {
+                Text("Paul Taylor")
+                Text("•")
+                Link("GitHub: ptylr/LibreArm", destination: URL(string: "https://github.com/ptylr/LibreArm")!)
+                    .foregroundStyle(.blue)
+                if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                    Text("• v\(version)")
+                }
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .padding(.bottom, 10)
         }
-        .font(.caption2)
-        .foregroundStyle(.secondary)
-        .lineLimit(1)
-        .minimumScaleFactor(0.8)
-        .frame(maxWidth: .infinity, minHeight: 42, alignment: .center)
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity)
         .background(Color(uiColor: .secondarySystemBackground))
         .overlay(alignment: .top) {
             Divider()

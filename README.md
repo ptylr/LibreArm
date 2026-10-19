@@ -22,9 +22,21 @@ LibreArm is a free, open-source iPhone app that connects directly to a QardioArm
 
 🫘 [Buy LibreArm a coffee](https://buy.stripe.com/aFa28tafD9ZydgpeRV9EI00) — LibreArm will always remain free. Voluntary support helps its continued development and does not unlock features or priority.
 
+## Version 1.7.0 — preparing for release
+
+The app footer includes **🫘 Buy LibreArm a coffee**, opening an optional one-time Apple in-app purchase. Apple displays the final price in its native confirmation before you approve the purchase. It is not a subscription and unlocks no features or priority. This change is in development and is not yet released; the Stripe support link above remains available independently.
+
+For local purchase testing, select the `2026-10-18-coffee-testing` Xcode scheme. Its StoreKit configuration simulates a £5 consumable (`com.ptylr.LibreArm.coffee`) without charging a payment method. The normal `LibreArm` scheme uses the App Store; the live product must be configured and approved before release. Automated StoreKit tests use the local configuration in the test bundle, which is excluded from the application bundle. Debug simulator builds include the debugging entitlement required by StoreKit Test; device and Release builds retain their normal entitlements. Run the suite with simulator signing enabled:
+
+```bash
+xcodebuild -project LibreArm.xcodeproj -scheme LibreArm \
+  -destination 'platform=iOS Simulator,name=iPhone 17' \
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test
+```
+
 ## Version 1.6.0
 
-Version 1.6.0 is the current development release and includes:
+Version 1.6.0 includes:
 
 - **One, two or three readings:** choose how many readings LibreArm should take and average, with a configurable 15–60 second interval between multiple readings.
 - **Guest measurements:** take a one-off measurement that remains visible in LibreArm but is never saved to the owner's Apple Health data; owner settings are preserved and guest mode switches off after the completed run.
@@ -38,6 +50,8 @@ Version 1.6.0 is the current development release and includes:
 
 ## Screenshots
 
+Development screenshots below include the upcoming coffee purchase. The support sheet explains the optional purchase; Apple displays the price in its native confirmation.
+
 <table>
   <tr>
     <th>Ready and configured</th>
@@ -45,9 +59,9 @@ Version 1.6.0 is the current development release and includes:
     <th>Multi-reading measurement</th>
   </tr>
   <tr>
-    <td><img src="./images/screenshots/LibreArm_v1.6.0_Ready.png" width="250" alt="LibreArm connected and ready, configured to average three readings with a 30-second interval"/></td>
-    <td><img src="./images/screenshots/LibreArm_v1.6.0_Guest.png" width="250" alt="LibreArm ready to start a guest measurement that will not be saved to Apple Health"/></td>
-    <td><img src="./images/screenshots/LibreArm_v1.6.0_Measuring.png" width="250" alt="LibreArm taking reading two of three"/></td>
+    <td><img src="./images/screenshots/2026-10-18-ready.png" width="250" alt="LibreArm connected and ready, configured to average three readings with a 30-second interval"/></td>
+    <td><img src="./images/screenshots/2026-10-18-guest.png" width="250" alt="LibreArm ready to start a guest measurement that will not be saved to Apple Health"/></td>
+    <td><img src="./images/screenshots/2026-10-18-measuring.png" width="250" alt="LibreArm taking reading two of three"/></td>
   </tr>
 </table>
 
@@ -55,10 +69,12 @@ Version 1.6.0 is the current development release and includes:
   <tr>
     <th>Result and home-reading guide</th>
     <th>Threshold guidance</th>
+    <th>Optional coffee purchase</th>
   </tr>
   <tr>
-    <td><img src="./images/screenshots/LibreArm_v1.6.0_Result.png" width="250" alt="LibreArm displaying a 120 over 70 result and the NICE home-reading guide"/></td>
-    <td><img src="./images/screenshots/LibreArm_v1.6.0_Guidance.png" width="250" alt="LibreArm showing the NICE home-reading threshold guidance sheet"/></td>
+    <td><img src="./images/screenshots/2026-10-18-result.png" width="250" alt="LibreArm displaying a 120 over 70 result and the NICE home-reading guide"/></td>
+    <td><img src="./images/screenshots/2026-10-18-guidance.png" width="250" alt="LibreArm showing the NICE home-reading threshold guidance sheet"/></td>
+    <td><img src="./images/screenshots/2026-10-19-coffee.png" width="250" alt="Upcoming one-time Apple coffee purchase sheet"/></td>
   </tr>
 </table>
 

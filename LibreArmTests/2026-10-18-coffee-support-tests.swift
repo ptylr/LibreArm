@@ -19,6 +19,33 @@ final class CoffeeSupportTests: XCTestCase {
         XCTAssertTrue(coffee.canPurchase)
     }
 
+    func testReopeningSheetRefreshesTheStorefrontPrice() async {
+        let store = FakeCoffeeStore()
+        let coffee = CoffeeSupport(store: store, observeTransactions: false)
+        await coffee.load()
+        store.price = "$5.00"
+        await coffee.load()
+        XCTAssertEqual(coffee.price, "$5.00")
+        XCTAssertEqual(coffee.state, .ready)
+    }
+
+    func testChangedPriceRequiresAnotherTapBeforePurchase() async {
+        let store = FakeCoffeeStore()
+        store.price = "$5.00"
+        let coffee = CoffeeSupport(store: store, observeTransactions: false)
+        await coffee.load()
+        store.price = "£5.00"
+        await coffee.buy()
+        XCTAssertEqual(coffee.price, "£5.00")
+        XCTAssertEqual(coffee.state, .ready)
+        XCTAssertEqual(store.purchaseCount, 0)
+        await coffee.buy()
+        XCTAssertEqual(store.purchaseCount, 1)
+        XCTAssertEqual(coffee.state, .thankYou)
+        await coffee.load()
+        XCTAssertEqual(coffee.state, .thankYou)
+    }
+
     func testCancellationDoesNotThankOrPreventAnotherAttempt() async {
         let store = FakeCoffeeStore()
         store.result = .cancelled

@@ -103,27 +103,52 @@ final class CoffeeSupport: ObservableObject {
     }
 
     func load() async {
+#if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--screenshot-state=coffee") { return }
+#endif
         guard state != .loading, state != .purchasing else { return }
-        if price != nil { return }
+        let previousState = state
         state = .loading
         do {
             price = try await store.loadPrice()
             // A pending approval may complete while the product request is suspended.
             guard state == .loading else { return }
-            state = price == nil
-                ? .failed("Coffee purchases are unavailable right now. Please try again later.")
-                : .ready
+            if previousState == .pending || previousState == .thankYou {
+                state = previousState
+            } else {
+                state = price == nil
+                    ? .failed("Coffee purchases are unavailable right now. Please try again later.")
+                    : .ready
+            }
         } catch {
             guard state == .loading else { return }
-            state = .failed("Couldn’t connect to the App Store. Please try again.")
+            price = nil
+            state = previousState == .pending || previousState == .thankYou
+                ? previousState
+                : .failed("Couldn’t connect to the App Store. Please try again.")
         }
     }
 
     func buy() async {
         guard canPurchase else { return }
+        let displayedPrice = price
         state = .purchasing
         do {
-            apply(try await store.purchase())
+            // Signing into Apple can change the storefront after the sheet opens.
+            let currentPrice = try await store.loadPrice()
+            guard state == .purchasing else { return }
+            price = currentPrice
+            guard currentPrice != nil else {
+                state = .failed("Coffee purchases are unavailable right now. Please try again later.")
+                return
+            }
+            guard currentPrice == displayedPrice else {
+                state = .ready
+                return // Show the new price and require a fresh purchase tap.
+            }
+            let result = try await store.purchase()
+            apply(result)
+            if result != .unverified { await load() }
         } catch {
             state = .failed("The purchase couldn’t be completed. Please check the App Store and try again.")
         }
@@ -143,6 +168,7 @@ final class CoffeeSupport: ObservableObject {
 struct CoffeeSupportView: View {
     @ObservedObject var coffee: CoffeeSupport
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         NavigationStack {
@@ -188,6 +214,15 @@ struct CoffeeSupportView: View {
         .presentationDetents([.medium, .large])
         .presentationDragIndicator(.visible)
         .task { await coffee.load() }
+        .task {
+            for await _ in Storefront.updates {
+                guard !Task.isCancelled else { return }
+                await coffee.load()
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { Task { await coffee.load() } }
+        }
     }
 
     @ViewBuilder

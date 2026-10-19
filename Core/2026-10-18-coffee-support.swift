@@ -131,7 +131,6 @@ final class CoffeeSupport: ObservableObject {
 
     func buy() async {
         guard canPurchase else { return }
-        let displayedPrice = price
         state = .purchasing
         do {
             // Signing into Apple can change the storefront after the sheet opens.
@@ -141,10 +140,6 @@ final class CoffeeSupport: ObservableObject {
             guard currentPrice != nil else {
                 state = .failed("Coffee purchases are unavailable right now. Please try again later.")
                 return
-            }
-            guard currentPrice == displayedPrice else {
-                state = .ready
-                return // Show the new price and require a fresh purchase tap.
             }
             let result = try await store.purchase()
             apply(result)
@@ -184,13 +179,13 @@ struct CoffeeSupportView: View {
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                    Text("A one-time purchase through Apple. No subscription.")
+                    Text("Apple shows the price before you confirm. A one-time purchase, with no subscription.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                     status
-                    if let price = coffee.price {
-                        Button("Buy a coffee · \(price)") {
+                    if coffee.price != nil {
+                        Button(coffee.state == .thankYou ? "Buy another coffee" : "Continue with Apple") {
                             Task { await coffee.buy() }
                         }
                         .buttonStyle(.borderedProminent)

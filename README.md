@@ -24,7 +24,7 @@ LibreArm is a free, open-source iPhone app that connects directly to a QardioArm
 
 ## Version 1.7.0 — preparing for release
 
-The app footer includes **🫘 Buy LibreArm a coffee**, opening an optional one-time Apple in-app purchase at the price shown in your local currency. It is not a subscription and unlocks no features or priority. This change is in development and is not yet released; the Stripe support link above remains available independently.
+The app footer includes **🫘 Buy LibreArm a coffee**, opening an optional one-time Apple in-app purchase. Apple displays the final price in its native confirmation before you approve the purchase. It is not a subscription and unlocks no features or priority. This change is in development and is not yet released; the Stripe support link above remains available independently.
 
 For local purchase testing, select the `2026-10-18-coffee-testing` Xcode scheme. Its StoreKit configuration simulates a £5 consumable (`com.ptylr.LibreArm.coffee`) without charging a payment method. The normal `LibreArm` scheme uses the App Store; the live product must be configured and approved before release. Automated StoreKit tests use the local configuration in the test bundle, which is excluded from the application bundle. Debug simulator builds include the debugging entitlement required by StoreKit Test; device and Release builds retain their normal entitlements. Run the suite with simulator signing enabled:
 
@@ -50,7 +50,7 @@ Version 1.6.0 includes:
 
 ## Screenshots
 
-Development screenshots below include the upcoming coffee purchase. The support sheet uses a sample UK price; the released app will display the App Store price for your storefront.
+Development screenshots below include the upcoming coffee purchase. The support sheet explains the optional purchase; Apple displays the price in its native confirmation.
 
 <table>
   <tr>
@@ -74,7 +74,7 @@ Development screenshots below include the upcoming coffee purchase. The support 
   <tr>
     <td><img src="./images/screenshots/2026-10-18-result.png" width="250" alt="LibreArm displaying a 120 over 70 result and the NICE home-reading guide"/></td>
     <td><img src="./images/screenshots/2026-10-18-guidance.png" width="250" alt="LibreArm showing the NICE home-reading threshold guidance sheet"/></td>
-    <td><img src="./images/screenshots/2026-10-18-coffee.png" width="250" alt="Upcoming one-time Apple coffee purchase sheet with a sample UK price"/></td>
+    <td><img src="./images/screenshots/2026-10-19-coffee.png" width="250" alt="Upcoming one-time Apple coffee purchase sheet"/></td>
   </tr>
 </table>
 

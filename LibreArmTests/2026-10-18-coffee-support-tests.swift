@@ -29,7 +29,7 @@ final class CoffeeSupportTests: XCTestCase {
         XCTAssertEqual(coffee.state, .ready)
     }
 
-    func testChangedPriceRequiresAnotherTapBeforePurchase() async {
+    func testStorefrontChangeStillUsesNativeCheckout() async {
         let store = FakeCoffeeStore()
         store.price = "$5.00"
         let coffee = CoffeeSupport(store: store, observeTransactions: false)
@@ -37,13 +37,22 @@ final class CoffeeSupportTests: XCTestCase {
         store.price = "£5.00"
         await coffee.buy()
         XCTAssertEqual(coffee.price, "£5.00")
-        XCTAssertEqual(coffee.state, .ready)
-        XCTAssertEqual(store.purchaseCount, 0)
-        await coffee.buy()
         XCTAssertEqual(store.purchaseCount, 1)
         XCTAssertEqual(coffee.state, .thankYou)
         await coffee.load()
         XCTAssertEqual(coffee.state, .thankYou)
+    }
+
+    func testProductUnavailableAtCheckoutDoesNotStartPurchase() async {
+        let store = FakeCoffeeStore()
+        let coffee = CoffeeSupport(store: store, observeTransactions: false)
+        await coffee.load()
+        store.price = nil
+        await coffee.buy()
+        XCTAssertNil(coffee.price)
+        XCTAssertEqual(store.purchaseCount, 0)
+        XCTAssertFalse(coffee.canPurchase)
+        guard case .failed = coffee.state else { return XCTFail("Expected unavailable product") }
     }
 
     func testCancellationDoesNotThankOrPreventAnotherAttempt() async {
